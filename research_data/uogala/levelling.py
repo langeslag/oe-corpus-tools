@@ -4,10 +4,10 @@
 
 import os,glob,json
 
-with open('/home/paul/Goettingen/echoe-svn/data/ner_forms.json') as ner_file:
+with open('../../ner_forms.json') as ner_file:
     ner = json.load(ner_file)
 
-with open('ycoe_pos_simplified.json') as pos_file:
+with open('../../ycoe_pos_simplified.json') as pos_file:
     pos = json.load(pos_file)
 
 # I'm treating "dæges" and "nihtes" as adverbials whose genitive origin no longer matters.
@@ -35,7 +35,7 @@ ignore = [
 
 data = dict()
 
-for infile in glob.glob('/home/paul/Goettingen/echoe-svn/plain/nlp/309*txt'):
+for infile in glob.glob('../../echoe-plaintext/309*txt'):
     version = os.path.basename(infile).replace('.txt', '')
     print(version)
     matches = []

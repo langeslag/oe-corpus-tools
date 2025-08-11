@@ -2,11 +2,12 @@
 # but renames some of the labels in accordance with ParCorOEv3. It
 # outputs both a frequency-ranked JSON and a simplified JSON giving
 # only the most frequent label.
+# It requires YCOE at ycoe/.
 # Copyright (C) 2025 Paul Langeslag
 
 import json,re
 from nltk.corpus.reader.ycoe import YCOECorpusReader
-root = '/home/paul/ebooks/Corpora/ycoe/'
+root = 'ycoe'
 ycoe = YCOECorpusReader(root)
 
 def normalize(w):
@@ -49,6 +50,8 @@ def relabel(pos):
 
 data = dict()
 
+print("Give it ten seconds while I gather forms and labels...")
+
 for token in ycoe.tagged_words():
     if token[0] not in '.:;,!?':
         norm = normalize(token[0])
@@ -83,4 +86,4 @@ for k,v in data.items():
 with open('ycoe_pos_simplified.json', 'w', encoding='utf-8') as outfile:
     json.dump(simplified, outfile, ensure_ascii=False, indent=4)
 
-print("OK done.")
+print("OK done; now see `ycoe_pos.json` and `ycoe_pos_simplified.json`.")

@@ -20,7 +20,7 @@ data = {}
 data_inverted = {}
 files = glob.glob('attsp/E*.txt')
 for file in files:
-    reference = file.removesuffix('.txt')
+    reference = os.path.basename(file).removesuffix('.txt')
     forms = open(file).read().splitlines()
     if len(forms) > 2:
         lemma = copy.copy(forms[0])

@@ -1,6 +1,6 @@
 # This script serves to help readers of my article "The Case Against English
 # Elements in _Hebban olla uogala_" reproduce my findings. It expects a JSON
-# index of attested spellings in the grantparent directory named `attsp.json`,
+# index of attested spellings in the grandparent directory named `attsp.json`,
 # generated with `attsp.sh` on the basis of the DOE A--H CD-ROM, and it
 # requires a plaintext corpus in the directory `../../doec-plaintext/`. It
 # outputs a list of DOE headwords beginning with "a" that are attested with
@@ -48,3 +48,7 @@ with open('h-prothesis-doec.txt', 'w') as f:
                 output = str(e.output)
             if p is not None:
                 f.write(p.decode())
+
+os.chdir('../research_data/uogala')
+if os.path.exists('h-prothesis-doec.txt') and os.path.getsize('h-prothesis-doec.txt') > 0:
+    print("Done; now see `h-prothesis.txt` and `h-prothesis-doec.txt`.")

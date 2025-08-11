@@ -22,7 +22,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
-echo "Data mining underway, this will take time..."
+echo "Data mining underway, this may take upwards of ten minutes..."
 
 # Expects HTML source files to be located in doe/; outputs as attsp/E*.txt.
 
@@ -626,8 +626,12 @@ sed -i '/^$/d' E*.txt
 
 mkdir -p unique
 for i in E*.txt; do 
-	(head -n 2 $i && tail -n +3 $i | sort -u) > unique/$i
+	(head -n 2 $i && tail -n +3 $i | sort -u) > "unique/${i}"
 done
 mv unique/E*.txt .
 rm -rf unique
 cd ..
+
+if [ -f "attsp/E18034.txt" ]; then
+	echo "OK done. Now run "python jsonify.py" if you want the data available in JSON format."
+fi

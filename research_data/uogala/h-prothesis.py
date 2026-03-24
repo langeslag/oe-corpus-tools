@@ -32,7 +32,7 @@ with open('h-prothesis.txt', 'w') as f:
 
 print("The total number of lexemes starting with <a> or <ā> is " + str(counter) + ".")
 
-search_path = '../../doec-plaintext/'
+search_path = '../../doec-bare/'
 with open('h-prothesis-doec.txt', 'w') as f:
     os.chdir(search_path)
     for k,v in matches.items():

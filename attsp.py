@@ -1,6 +1,8 @@
 # This script will replace attsp.sh
 # but is as yet under development.
 # Copyright Paul Langeslag 2026
+# TODO: pick up proofreading at E00004
+# TODO: consider cutting fragmentary readings
 import json,re
 from pathlib import Path
 from bs4 import BeautifulSoup
@@ -11,10 +13,28 @@ target_folder.mkdir(exist_ok=True)
 
 # Substrings to be elided wherever they occur:
 cuts = [
+        '(the Tironian note, here represented by &, may possibly be taken as on-, thus giving a headword *onbīcnian',
+        '(acc.sg.; ? or gen.pl.: cf. Heliand 438, 2017 for the gen.pl. phrase frio sconiosta)',
+        '(or take as mutated comparatives of gnēaþ / gnēad, Bede MS B)',
+        '(HomU 5.5, xiii; here the only attestation of a possibly strong form)',
+        'for hohful with second element evidently associated with fullfremed, BenRGl)',
         '? Partial reading in gloss:',
+        '(or perh. take as an instance of a wk. 1 vb. *blendan ‘to mix’)',
+        '(gen.pl., HomM 15 [Wanley transcr.])',
+        '(PsCaK, xii; ÆGram MS W, xiii);',
+        'Spellings in -ng',
         'Forms originally proper to the dative are used for the general object case in some texts of s. xii and later',
+        'Formed on pres.part.:',
+        'Formed on stem:',
+        'Reduced forms:',
+        'In late North. texts:',
+        '(with u [?] over wynn, acc.sg.)',
+        '? With compar. first element:',
         'take as pret.subj.sg. of st. 7 vb. geblandan or as an instance of pret.indic.sg. of a wk. 1 vb. *geblendan',
         'take as pret.pl. of st. 7 vb. geblandan or as an instance of the pret.pl. of a wk. 1 vb. *geblendan',
+        '(-leaf erased, ÆGl MS F)',
+        '(for hand swa, BenR)',
+        '(? p altered from c by later hand, AldV 1)',
         'Or perhaps take as forms of otherwise unattested efenheortnes',
         'The form may alternatively be taken as two words with helle as gen.sg. of hell',
         'hiwlæs with a second læs written immediately below the first',
@@ -24,6 +44,7 @@ cuts = [
         'With - es as a generalized adverbial marker',
         'these forms may alternatively be read as merographs of forms of hēahnes',
         'form may have arisen by confusion of the dat.inf. to gehealdenne = custodiendus with an adj. like deriendlic',
+        '(BDSN MSS Hk, Kl2, Me, V, Z, xii-xv);',
         'I. Active forms and past part',
         'II. Passive forms excluding the past part',
         'adjectival inflectional endings are added to gen.sg.',
@@ -49,6 +70,10 @@ cuts = [
         'Gen.pl. with m./n.dat.sg. or dat.pl. inflection',
         'se gifra helle',
         'ðam deopan helle',
+        'has been read as',
+        'with brem repeated by dittography, Lch II)',
+        'CCCC',
+        'Comp.',
         'with traces of cm written above the line',
         'Uninfl. North. glosses of familias',
         'Gen.pl. with m./n.dat.sg. or dat.pl. inflection',
@@ -57,12 +82,21 @@ cuts = [
         'Att. sp.: ',
         'Compar.: ',
         'Late: ',
+        'inflected:',
         'Rarely',
         'Superl.',
         'all copies of HomS 11',
+        '(Ch IWm [Douglas 7])',
+        'CP [Cot)',
+        'Cot.Calig.',
         'Abbrev. form in a gloss',
         'Abbrev. forms in glosses: ',
+        'Forms without mark of abbrev.:',
+        'Also in an inscription now lost:',
+        '(RuneBewcastle)',
         'Anom. forms',
+        'Compromise spelling:',
+        'Contracted forms:',
         'Forty Soldiers',
         'acc.sg./dat.sg.',
         'acc./gen.sg.',
@@ -80,6 +114,7 @@ cuts = [
         'Unambiguous wk. 2 forms',
         'as if f., cl. 2 or n. noun * gydde ?',
         'as if f.',
+        '(for grimman mannes, Bede MS B)',
         'Endingless in acc.sg.',
         'Spellings in eg- are mainly North',
         'Spellings in oe- are North',
@@ -111,6 +146,8 @@ cuts = [
         'metathesis',
         'perh.',
         'Scratched',
+        'scratched',
+        'composition',
         'With unmetathesized suffix',
         'With inflected first element',
         'With merging of æl',
@@ -124,21 +161,56 @@ cuts = [
         'the combining form of eall',
         'for other gr- spellings',
         'With ǣ-',
+        'Aldredian',
+        'Ch IIHen [PRO1912 3], xiv)',
+        'Book of Kings',
         'cf. gringwræce s.v. cringan',
         'Bede MSS BCaO',
         'AldV',
+        '(Mart 2.1)',
+        '(Bede)',
+        '(HyGl 2, HyGl 3)',
+        '(f.nom./acc.pl.)',
+        '(f./n.nom.sg., n.acc.sg.),'
+        '(HomU 35.2);',
+        '(ÆHomM 5)',
+        'ÆAbus',
+        'ÆGram',
+        'Eugenia',
+        'Agatha',
+        '&AElig;CHom I MS B, xii2',
+        'Wk. forms with loss of inflectional -n',
+        'Uninflected forms in glosses:',
+        'Uninflected',
+        '(st.m./n.gen.sg., Abbo, PsGlG; ? st.m.acc.sg., Abbo).',
+        ', st.f.dat.sg., AldV 13.1).',
+        ', st.f.dat.sg., AldV 1, AldV 13.1),',
+        '(wk.m.dat.sg., LambHom [Morris 10], xiii);',
         'xiv-xv',
+        'Lch',
+        'cryptogram',
+        'enclitic',
+        'Erroneous',
+        'nom./',
         'Lch I MS O',
         'IIHen',
         'IHen',
         'IIWm',
         'ÆCHom I MS G',
+        'BenRW',
+        'Doubly',
+        'Negation',
+        'PGerm.',
         'unaccented',
         'mid mycele ferde',
         'Masculine',
         'Neuter',
         'Feminine',
+        'Ambiguous',
+        'altered',
         'wk.gen.pl.',
+        'm.instr.sg.',
+        'm./n.instr.sg.',
         '-i-/-ig-',
         'nom.sg.',
         'acc.sg. - ',
@@ -147,6 +219,9 @@ cuts = [
         'gen.sg. ',
         'dat.sg. - ',
         'dat.sg.',
+        'tmesis',
+        'Auguries',
+        'Merc.',
         'both acc.pl.',
         'all 2nd pl.',
         'nom./acc.sg.',
@@ -157,6 +232,15 @@ cuts = [
         'pret.pl.',
         'pret.indic.sg.',
         'pret.subj.sg.',
+        'Pres.ind.pl.',
+        'Pres.ind.sg.',
+        'Pres.subj.pl.',
+        'Pres.subj.sg.',
+        'Pret.ind.pl.',
+        'Pret.ind.sg.',
+        'Pret.subj.pl.',
+        'Pret.subj.sg.',
+        'Yale',
         'nom.pl.',
         'acc.pl.',
         'gen.pl.',
@@ -165,7 +249,9 @@ cuts = [
         'prefix',
         'A.xiv',
         'Pres.part.',
+        'pret.ind.',
         'pres.',
+        'umlaut',
         'M. wk. with t',
         'gender',
         ' for h ',
@@ -177,6 +263,7 @@ cuts = [
         'CollGl 32.3',
         'CollGl 38.6 are preserved in continental MSS',
         'CollGl',
+        'Compar.',
         'Mart 5',
         'HomU 32 MS B',
         'LawII/IIIEg',
@@ -192,13 +279,23 @@ cuts = [
         'Redupl. pret.',
         'ðone onsione',
         'hæ nū',
+        'initial',
+        'nom./acc./gen./',
         'ðis hælo',
         'expanded as ',
         'm. more common',
         'Unambig.',
+        'Camb.Trin.',
+        'R.5.22',
+        'Rec.5.4',
+        'HomU',
         'ambig.',
         'added',
-        'cl.',
+        'Indecl. forms:',
+        'Indecl.',
+        'shortened',
+        'ÆHomM',
+        'LawGer',
         'IE bheu-',
         'IE wes-',
         'IE es-',
@@ -213,22 +310,23 @@ cuts = [
         'cl. 4',
         '2nd sg',
         'm./f.',
+        'gen.sg./',
         'Assim.',
         'wk.',
         'Wk.',
         'St.',
         'st.',
+        'Pl.',
         'cf.',
         'PPs [prose]',
         'ÆLS',
         'Lat.',
         'Maccabees',
+        'Macabees',
         'Christmas',
         'M. or N.',
         'inflections',
-        'M.',
-        'N.',
-        'F.',
+        'MS P',
         'm./f./n.',
         'm./n.dat.sg.',
         'in pl.',
@@ -236,6 +334,7 @@ cuts = [
         'Ru1',
         'Corrupt',
         'Ambig.',
+        'Anglian',
         'belonging',
         'With',
         'xii/xiii',
@@ -245,6 +344,17 @@ cuts = [
         'xiv',
         's.xvi',
         'adj.',
+        'transcr.',
+        'part.',
+        'declined',
+        'spellings',
+        'associated',
+        'vowel',
+        'imp.sg.',
+        'nom.',
+        'acc.',
+        'gen.',
+        'dat.',
         ',',
         ':',
         ';',
@@ -255,7 +365,11 @@ cuts = [
         ')',
         '[',
         ']',
-        '*'
+        '*',
+        '‘',
+        '’',
+        '/',
+        '\\'
 ]
 
 # Replacement rules:
@@ -391,7 +505,8 @@ regex = [
         (r'(foresce) (g)', r'/\1\2'),
         (r'te (habbe)', r'\1'),
         (r'(forewit) (tiendlicer)', r'\1\2'),
-        (r'(hen) se', r'\1')
+        (r'(hen) se', r'\1'),
+        (r'þet (foster)', r'\1')
 ]
 
 # Sequences to be replaced by a space wherever thy occur:
@@ -406,12 +521,104 @@ spaces = [
 
 # Forms that should not be accepted as spellings:
 disallow_forms = [
+        'es-',
+        'ge-',
+        'gi-',
+        'or-',
+        's-',
+        'sc-',
+        'pron.',
+        'ar-',
+        'Pa',
+        '-leaf',
+        'Solil',
+        'f.n.',
+        'i.e.',
+        's.v.',
+        'Q',
+        'Or',
+        'Cot',
+        'IE',
+        'Birch',
+        'Imp.pl.',
+        'Imp.sg.',
+        'Inf.',
+        'Infl.inf.',
+        'Mk',
+        'W',
+        'Abbrev',
+        'Alban',
+        'Denis',
+        'compar.',
+        '-d-',
+        '-e-',
+        '-y-',
+        'assim',
+        'Dugdale',
+        'Anom',
+        'Inde',
+        '-xv',
+        'BDSN',
+        'LawCn',
+        'med.',
+        'Quadr',
+        '-w-',
+        'From',
+        'ā-',
+        'St',
+        'Wk',
+        '-fēte',
+        '-fōte',
+        'acc./',
+        '-es',
+        'gen.',
+        'Bede',
         'Past',
+        'past',
         'Partial',
+        'II',
+        'Martin',
+        'Agnes',
+        'OccGl',
+        'Ex',
+        'charter',
+        'North.',
         'App',
+        'viii',
         'ÆCHom',
+        'DurRit',
+        '-ng',
+        'HomM',
+        'Spellings',
+        'Wanley',
+        'A.xiv',
         'B.xi',
+        'B.ii',
+        'æle-',
+        'CP',
+        'GD',
+        'L',
+        'O',
+        'In',
+        'Eust',
+        'cl.',
+        'ÆGl',
+        'CorpGl',
+        'Mark',
+        'Oswald',
+        'PPsprose',
+        'V',
+        'xi',
+        'mix',
+        'pl.',
+        'WSGosp',
+        'ÆLet',
+        'ÆHom',
+        '-cs-',
+        '-x-',
         'Cot.Otho',
+        'Conf',
+        'Head',
         'Rec',
         'out',
         'document',
@@ -430,14 +637,19 @@ disallow_forms = [
         'emended',
         'form',
         'forms',
+        'Forms',
+        'medial',
         'corrupt',
         'Late',
         'context',
         'E',
         'MSS',
         'MS',
+        'wes-',
         'Thomas',
+        '1st',
         '3rd',
+        'ind.',
         'CH',
         'Galbraith',
         'Li',
@@ -446,12 +658,14 @@ disallow_forms = [
         'to',
         'Alc',
         'D',
+        'pl.',
         'xv',
         'CE',
         'Nic',
         'Basil',
         'Lit',
         'Ru',
+        'Ad',
         'm.',
         'A',
         'B',
@@ -483,6 +697,9 @@ disallow_forms = [
         'q.v.',
         'sense',
         'we',
+        'M.',
+        'N.',
+        'F.',
         'and-',
         '-and-',
         '-ann-',
@@ -508,9 +725,10 @@ disallow_forms = [
         'y'
 ]
 
-# Keys that are admissible as forms only for the listed headwords:
+# Forms that are admissible only for the listed headwords:
 exceptions = {
         'a': ['ān', 'ā-gēn, ā-gēan', 'a noun', 'ā adv.', 'a prep.', 'ac', 'antefn', 'ǣ', 'ēa noun', 'hwā, hwæt'],
+        'as': ['eall-swā'],
         'æ': ['*arce-pallium, *arcebisceop-pallium', 'ā adv.', 'æ', 'ǣ', 'æt prep. and adv.', 'æt prep. and adv.', 'ēa noun', 'eall adj.', 'etan'],
         'b': ['b', 'bisceop'],
         'c': ['cennan', 'crist', 'c'],
@@ -529,17 +747,21 @@ exceptions = {
         'H': ['h'],
         'i': ['i'],
         'I': ['i'],
+        'ix': ['ex1'],
         'in': ['in prep. and adv.', 'in adv., inn', 'inn noun'],
         'k': ['cyning, cyng'],
         'o': ['ā adv.', 'hōh'],
         'of': ['hof', 'of prep.', 'of adv.'],
         'r': ['hēr', 'ge·hȳran1'],
         't': ['hwīt adj.'],
+        'ðone': ['þonne adv.', 'þonne conj.', 'þon', 'sē, þæt, sēo'], # wait for final form of that last one
+        'ðu': ['þu', 'þū', 'þā adv.', 'þā conj.'], # wait for final form of headword ID 28439
         'u': ['fers, uers'],
         'we': ['we', 'wē']
 }
 
 entries = dict()
+inverted = dict()
 for entry in html_folder.glob('*.html'):
     ref = entry.name[:-5]
     print(ref)
@@ -569,11 +791,11 @@ for entry in html_folder.glob('*.html'):
             line = line.replace(pattern, '')
         spellings.extend(line.split())
     spellings = sorted(list(set(spellings)))
-    purged_spellings = [form for form in spellings 
+    purged_spellings = list(set([form for form in spellings 
                         if form not in disallow_forms 
                         and not re.search('^[§.0-9]*$', form)
                         and not (form in exceptions and not lemma in exceptions[form])
-                        ]
+                        ]))
 
     entry_dict = {
             'lemma': lemma,
@@ -582,6 +804,29 @@ for entry in html_folder.glob('*.html'):
             'attsp': purged_spellings
             }
     entries[ref] = entry_dict
+    for spelling in purged_spellings:
+        if not spelling in inverted:
+            inverted[spelling] = []
+        if not ref in inverted[spelling]:
+            inverted[spelling].append((ref, lemma, pos, occ))
+        inverted[spelling] = sorted(inverted[spelling], key=lambda x: x[3], reverse=True)
+inverted = dict(sorted(inverted.items()))
+entries = dict(sorted(entries.items()))
 
 with open('attsp.json', 'w', encoding='utf-8') as output:
     json.dump(entries, output, ensure_ascii=False, indent=4)
+
+with open('attsp_inverted.json', 'w') as outfile:
+    json.dump(inverted, outfile)
+
+for k,v in entries.items():
+    filename = k + '.txt'
+    outfile = Path.cwd() / 'attsp' / filename
+    if outfile.is_file():
+        outfile.unlink()
+    with open(outfile, 'w') as f:
+        f.write('# ' + v['lemma'] + '\n')
+        f.write('# ' + v['pos'] + '\n')
+        f.write('# ' + v['freq'])
+        for i in v['attsp']:
+            f.write(f'\n{i}')

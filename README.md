@@ -1,6 +1,6 @@
 # oe-corpus-tools
 
-Processing tools for various Old English text corpora and resources. I'm still organizing the folder structure.
+Processing tools for various Old English text corpora and resources.
 
 ## Disclaimer
 
@@ -8,9 +8,7 @@ The tools here provided have been developed and made available with no affiliati
 
 ## Attested Spellings
 
-`attsp.sh` is a primitive `bash` script that, if run from a folder with a subfolder `doe/` containing the entries of the 2017 _DOE A–H_ CD-ROM release in HTML format, will extract and store (1) the lemma, (2) the line reporting on the number of attestations, and (3) each attested spelling on its own line in a corresponding plaintext file for convenient `grep` access.
-
-`jsonify.py` is a Python script that takes the resulting data and stores them in two JSON files: one (`attsp.json`) organized by headword and another (`attsp_inverted.json`) by spelling for ease of programmatic access.
+`attsp.py` has now replaced `attsp.sh`. If run from a folder with a subfolder `doe/` containing the entries of the 2017 _DOE A–H_ CD-ROM release in HTML format, it will extract and store (1) the lemma, (2) the part of speech, (3) the line reporting on the number of attestations, and (4) each attested spelling on its own line in a corresponding plaintext file for convenient `grep` access. It also outputs `attsp.json` and `attsp_inverted.json` for ease of programmatic access. Please note that attested spelling data are still under revision.
 
 ## Part-of-Speech Labels
 

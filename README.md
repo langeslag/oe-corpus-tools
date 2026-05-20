@@ -8,7 +8,9 @@ The tools here provided have been developed and made available with no affiliati
 
 ## Attested Spellings
 
-`attsp.py` has now replaced `attsp.sh`. If run from a folder with a subfolder `doe/` containing the entries of the 2017 _DOE A–H_ CD-ROM release in HTML format, it will extract and store (1) the lemma, (2) the part of speech, (3) the line reporting on the number of attestations, and (4) each attested spelling on its own line in a corresponding plaintext file for convenient `grep` access. It also outputs `attsp.json` and `attsp_inverted.json` for ease of programmatic access. Please note that attested spelling data are still under revision.
+`attsp.py` has now replaced `attsp.sh`. If run from a folder with a subfolder `doe/` containing the entries of the 2017 _DOE A–H_ CD-ROM release in HTML format, it will extract and store (1) the lemma, (2) the part of speech, (3) the line reporting on the number of attestations, and (4) each attested spelling on its own line in a corresponding plaintext file for convenient `grep` access. It also outputs `attsp.json` and `attsp_inverted.json` for ease of programmatic access.
+
+`find_mne_forms.py` is a helper script that determines which tokens in the _DOE_ attested spellings fields are Modern English forms, and whether they overlap with forms attested for any Old English words. It requires the output JSON of `attsp.sh` as input and generates `pde.json`, but since the latter ships with the present repository, you will not normally need to generate it yourself.
 
 ## Part-of-Speech Labels
 

@@ -1,11 +1,27 @@
-# This script will replace attsp.sh
-# but is as yet under development.
+# This script extracts headword, POS, frequency, and attested spellings
+# from the Dictionary of Old English A--H CD-ROM (if HTML at ./doe/).
 # Copyright Paul Langeslag 2026
-# TODO: pick up proofreading at E00004
+# TODO: readd epigraphy, which is filtered out by re.search
 # TODO: consider cutting fragmentary readings
-import json,re
+import json,re,argparse
 from pathlib import Path
 from bs4 import BeautifulSoup
+
+argparser = argparse.ArgumentParser()
+# This flag is for internal use only; it assumes you have access to a headword list
+# formatted as a dictionary whose keys are imported if this option is used; this
+# requires for each item value to be a tuple whose third value matches 'entry' below.
+argparser.add_argument('--id', action='store_true')
+args = argparser.parse_args()
+if args.id == True:
+    use_lemma_id = True
+    print("Loading DOE headword data...")
+    # Set path to headword list here if available:
+    doe_headwords_json = 'doeheadwords.json'
+    with open(doe_headwords_json) as json_data:
+        doe_headwords = json.load(json_data)
+else:
+    use_lemma_id = False
 
 html_folder = Path.cwd() / 'doe'
 target_folder = Path.cwd() / 'attsp'
@@ -13,6 +29,9 @@ target_folder.mkdir(exist_ok=True)
 
 # Substrings to be elided wherever they occur:
 cuts = [
+        '(the hypothesized infinitive headword is very uncertain, and the recorded hamacgað has been taken as a form of otherwise unrecorded *gemagian)',
+        'There are occurrences of forms of anbidian with on- for an- : ',
+        'glosses expectant in PsGlE 68.7, presumably for onbidaþ (see onbīdan, and cf. PsGlL 68.7 onbidað), but perhaps for onbidiaþ (cf. PsGlI anbidiaþ, PsGlGHK anbidiað, PsGlD anbidigað, PsGlF andbidiað).',
         '(the Tironian note, here represented by &, may possibly be taken as on-, thus giving a headword *onbīcnian',
         '(acc.sg.; ? or gen.pl.: cf. Heliand 438, 2017 for the gen.pl. phrase frio sconiosta)',
         '(or take as mutated comparatives of gnēaþ / gnēad, Bede MS B)',
@@ -34,6 +53,10 @@ cuts = [
         'take as pret.pl. of st. 7 vb. geblandan or as an instance of the pret.pl. of a wk. 1 vb. *geblendan',
         '(-leaf erased, ÆGl MS F)',
         '(for hand swa, BenR)',
+        '(the MS character ⁊).',
+        '(wynn, for the Tironian note, GenA 1120).',
+        '(? for awille; or perh. for awillendlice or awillice; or if ā- is for ān-, perh. take as a form of ānwillendlīce [q.v.] or ānwillīce [q.v.])',
+        ' (with first a and i added afterwards, ? for ageanhwirfte; or perh. ageanhwirfe, ageanhwirfenysse)',
         '(? p altered from c by later hand, AldV 1)',
         'Or perhaps take as forms of otherwise unattested efenheortnes',
         'The form may alternatively be taken as two words with helle as gen.sg. of hell',
@@ -72,32 +95,21 @@ cuts = [
         'ðam deopan helle',
         'has been read as',
         'with brem repeated by dittography, Lch II)',
-        'CCCC',
-        'Comp.',
         'with traces of cm written above the line',
         'Uninfl. North. glosses of familias',
         'Gen.pl. with m./n.dat.sg. or dat.pl. inflection',
         'these forms have alternatively been taken as n.',
         'Dat.pl. with dat.pl. inflection',
-        'Att. sp.: ',
-        'Compar.: ',
-        'Late: ',
         'inflected:',
-        'Rarely',
-        'Superl.',
         'all copies of HomS 11',
         '(Ch IWm [Douglas 7])',
-        'CP [Cot)',
-        'Cot.Calig.',
         'Abbrev. form in a gloss',
         'Abbrev. forms in glosses: ',
         'Forms without mark of abbrev.:',
         'Also in an inscription now lost:',
-        '(RuneBewcastle)',
         'Anom. forms',
         'Compromise spelling:',
         'Contracted forms:',
-        'Forty Soldiers',
         'acc.sg./dat.sg.',
         'acc./gen.sg.',
         'Anom. form in a gloss',
@@ -106,8 +118,6 @@ cuts = [
         'In North. glosses',
         'Unambig. f. wk.',
         'As alternative gloss for fyðerfōte',
-        'Strong Adjective:',
-        'Weak Adjective',
         'With st. inflections',
         'Northumbrian paradigm',
         'Forms without final n',
@@ -145,7 +155,6 @@ cuts = [
         'With metathesis',
         'metathesis',
         'perh.',
-        'Scratched',
         'scratched',
         'composition',
         'With unmetathesized suffix',
@@ -161,52 +170,24 @@ cuts = [
         'the combining form of eall',
         'for other gr- spellings',
         'With ǣ-',
-        'Aldredian',
         'Ch IIHen [PRO1912 3], xiv)',
         'Book of Kings',
         'cf. gringwræce s.v. cringan',
-        'Bede MSS BCaO',
-        'AldV',
-        '(Mart 2.1)',
-        '(Bede)',
-        '(HyGl 2, HyGl 3)',
         '(f.nom./acc.pl.)',
         '(f./n.nom.sg., n.acc.sg.),'
-        '(HomU 35.2);',
-        '(ÆHomM 5)',
-        'ÆAbus',
-        'ÆGram',
-        'Eugenia',
-        'Agatha',
         '&AElig;CHom I MS B, xii2',
         'Wk. forms with loss of inflectional -n',
         'Uninflected forms in glosses:',
-        'Uninflected',
         '(st.m./n.gen.sg., Abbo, PsGlG; ? st.m.acc.sg., Abbo).',
         ', st.f.dat.sg., AldV 13.1).',
         ', st.f.dat.sg., AldV 1, AldV 13.1),',
         '(wk.m.dat.sg., LambHom [Morris 10], xiii);',
         'xiv-xv',
-        'Lch',
         'cryptogram',
         'enclitic',
-        'Erroneous',
         'nom./',
-        'Lch I MS O',
-        'IIHen',
-        'IHen',
-        'IIWm',
-        'ÆCHom I MS G',
-        'BenRW',
-        'Doubly',
-        'Negation',
-        'PGerm.',
         'unaccented',
         'mid mycele ferde',
-        'Masculine',
-        'Neuter',
-        'Feminine',
-        'Ambiguous',
         'altered',
         'wk.gen.pl.',
         'm.instr.sg.',
@@ -220,8 +201,6 @@ cuts = [
         'dat.sg. - ',
         'dat.sg.',
         'tmesis',
-        'Auguries',
-        'Merc.',
         'both acc.pl.',
         'all 2nd pl.',
         'nom./acc.sg.',
@@ -240,7 +219,6 @@ cuts = [
         'Pret.ind.sg.',
         'Pret.subj.pl.',
         'Pret.subj.sg.',
-        'Yale',
         'nom.pl.',
         'acc.pl.',
         'gen.pl.',
@@ -260,22 +238,8 @@ cuts = [
         'Forms in LdGl',
         'Forms in -nd-',
         'Fragm. forms',
-        'CollGl 32.3',
         'CollGl 38.6 are preserved in continental MSS',
-        'CollGl',
-        'Compar.',
-        'Mart 5',
-        'HomU 32 MS B',
-        'LawII/IIIEg',
         'f./n./',
-        'Dittographic',
-        'Uncertain',
-        'Leg.Henr.I',
-        'BLAdd',
-        'Hardwick',
-        'Hearne',
-        'With -swæc',
-        'With -spæc',
         'Redupl. pret.',
         'ðone onsione',
         'hæ nū',
@@ -284,22 +248,10 @@ cuts = [
         'ðis hælo',
         'expanded as ',
         'm. more common',
-        'Unambig.',
-        'Camb.Trin.',
-        'R.5.22',
-        'Rec.5.4',
-        'HomU',
         'ambig.',
         'added',
         'Indecl. forms:',
-        'Indecl.',
         'shortened',
-        'ÆHomM',
-        'LawGer',
-        'IE bheu-',
-        'IE wes-',
-        'IE es-',
-        'PGerm. ar-',
         'M. cl. 3 (pl.)',
         'Wk. m ',
         'Wk. 1',
@@ -311,32 +263,17 @@ cuts = [
         '2nd sg',
         'm./f.',
         'gen.sg./',
-        'Assim.',
         'wk.',
-        'Wk.',
-        'St.',
         'st.',
-        'Pl.',
         'cf.',
         'PPs [prose]',
-        'ÆLS',
-        'Lat.',
-        'Maccabees',
-        'Macabees',
-        'Christmas',
         'M. or N.',
         'inflections',
-        'MS P',
         'm./f./n.',
         'm./n.dat.sg.',
         'in pl.',
         'n. more common',
-        'Ru1',
-        'Corrupt',
-        'Ambig.',
-        'Anglian',
         'belonging',
-        'With',
         'xii/xiii',
         'xii-xiii',
         'xiii',
@@ -355,6 +292,8 @@ cuts = [
         'acc.',
         'gen.',
         'dat.',
+        'inst.',
+        'The form',
         ',',
         ':',
         ';',
@@ -368,7 +307,7 @@ cuts = [
         '*',
         '‘',
         '’',
-        '/',
+#        '/',
         '\\'
 ]
 
@@ -506,7 +445,8 @@ regex = [
         (r'te (habbe)', r'\1'),
         (r'(forewit) (tiendlicer)', r'\1\2'),
         (r'(hen) se', r'\1'),
-        (r'þet (foster)', r'\1')
+        (r'þet (foster)', r'\1'),
+        (r'(an) (twig)', r'\1\2')
 ]
 
 # Sequences to be replaced by a space wherever thy occur:
@@ -521,213 +461,49 @@ spaces = [
 
 # Forms that should not be accepted as spellings:
 disallow_forms = [
-        'es-',
-        'ge-',
-        'gi-',
-        'or-',
-        's-',
-        'sc-',
-        'pron.',
-        'ar-',
-        'Pa',
-        '-leaf',
-        'Solil',
-        'f.n.',
-        'i.e.',
-        's.v.',
-        'Q',
-        'Or',
-        'Cot',
-        'IE',
-        'Birch',
-        'Imp.pl.',
-        'Imp.sg.',
-        'Inf.',
-        'Infl.inf.',
-        'Mk',
-        'W',
-        'Abbrev',
-        'Alban',
-        'Denis',
-        'compar.',
-        '-d-',
-        '-e-',
-        '-y-',
         'assim',
-        'Dugdale',
-        'Anom',
-        'Inde',
-        '-xv',
-        'BDSN',
-        'LawCn',
-        'med.',
-        'Quadr',
-        '-w-',
-        'From',
-        'ā-',
-        'St',
-        'Wk',
-        '-fēte',
-        '-fōte',
-        'acc./',
-        '-es',
-        'gen.',
-        'Bede',
-        'Past',
+        'erased',
         'past',
-        'Partial',
-        'II',
-        'Martin',
-        'Agnes',
-        'OccGl',
-        'Ex',
         'charter',
-        'North.',
-        'App',
         'viii',
-        'ÆCHom',
-        'DurRit',
-        '-ng',
-        'HomM',
-        'Spellings',
-        'Wanley',
-        'A.xiv',
-        'B.xi',
-        'B.ii',
-        'æle-',
-        'CP',
-        'GD',
-        'L',
-        'O',
-        'In',
-        'Eust',
-        'cl.',
-        'ÆGl',
-        'CorpGl',
-        'Mark',
-        'Oswald',
-        'PPsprose',
-        'V',
         'xi',
         'mix',
-        'pl.',
-        'WSGosp',
-        'ÆLet',
-        'ÆHom',
-        '-cs-',
-        '-x-',
-        'Cot.Otho',
-        'Conf',
-        'Head',
-        'Rec',
         'out',
         'document',
         'preceding',
         'reading',
         'with',
         'scribe',
-        'Ch',
-        '-a',
-        '?',
-        'Cl.',
-        'Earle',
-        'Somner',
-        'IWm',
-        'LS',
         'emended',
         'form',
         'forms',
-        'Forms',
         'medial',
         'corrupt',
-        'Late',
         'context',
-        'E',
-        'MSS',
-        'MS',
-        'wes-',
-        'Thomas',
-        '1st',
-        '3rd',
-        'ind.',
-        'CH',
-        'Galbraith',
-        'Li',
-        'Warn',
-        'PRO',
         'to',
-        'Alc',
-        'D',
-        'pl.',
         'xv',
-        'CE',
-        'Nic',
-        'Basil',
-        'Lit',
-        'Ru',
-        'Ad',
-        'm.',
-        'A',
-        'B',
-        'dat.sg.',
         'transcript',
-        'Gen',
-        'Ker',
-        'sg.',
-        'xi-',
-        'Edmund',
-        'Superl.',
-        'vb.',
         'take',
         'the',
         'instance',
-        'fragm.',
-        'f.',
-        'fragm.',
         'glosses',
         'inflection',
-        'f.hracan',
-        'Anm.',
-        'OEG',
-        'S-B',
-        'redupl.',
-        'pret.',
         'metathesis',
-        'perh.',
-        'q.v.',
         'sense',
         'we',
-        'M.',
-        'N.',
-        'F.',
-        'and-',
-        '-and-',
-        '-ann-',
-        '-end-',
         'late',
-        'Att.sp.',
-        'Fragm.',
-        'pres.subj.pl.',
-        'Abbrev.',
-        'LambHom',
-        'Morris',
         'glossing',
         'gloss',
         'by',
-        'Anom.',
-        'm./f./n.',
-        'm./n.dat.sg.',
-        'n.',
         'n',
         'd',
-        'in-',
-        'on-',
         'y'
 ]
 
 # Forms that are admissible only for the listed headwords:
 exceptions = {
         'a': ['ān', 'ā-gēn, ā-gēan', 'a noun', 'ā adv.', 'a prep.', 'ac', 'antefn', 'ǣ', 'ēa noun', 'hwā, hwæt'],
+        'are': ['ān', 'ār1, āre', 'ār2', 'ārian', 'ǣr adv., prep. and conj.', 'ǣrra, ǣrest', 'ēar2'],
         'as': ['eall-swā'],
         'æ': ['*arce-pallium, *arcebisceop-pallium', 'ā adv.', 'æ', 'ǣ', 'æt prep. and adv.', 'æt prep. and adv.', 'ēa noun', 'eall adj.', 'etan'],
         'b': ['b', 'bisceop'],
@@ -760,73 +536,80 @@ exceptions = {
         'we': ['we', 'wē']
 }
 
-entries = dict()
-inverted = dict()
-for entry in html_folder.glob('*.html'):
-    ref = entry.name[:-5]
-    print(ref)
-    with open(entry) as html_file:
-        soup = BeautifulSoup(html_file, 'html.parser')
+def extract():
+    entries = dict()
+    inverted = dict()
+    for entry in html_folder.glob('*.html'):
+        ref = entry.name[:-5]
+        print(ref)
+        if use_lemma_id == True:
+            lemma_id = next((k for k,v in doe_headwords.items() if v[2] == ref), None)
+        with open(entry) as html_file:
+            soup = BeautifulSoup(html_file, 'html.parser')
+    
+        lemma_node = soup.find('div', class_=['doe-hd', 'doe-sub', 'doe-affix'])
+        lemma = lemma_node.get_text().strip('\n')
+        pos_node = soup.find('div', class_=['doe-pos'])
+        if pos_node is None:
+            pos = ''
+        else:
+            pos = pos_node.get_text()
+        occ_node = soup.find('div', class_=['doe-occ'])
+        if occ_node is None:
+            occ = ''
+        else:
+            occ = occ_node.get_text()
+        spelling_strings = [i.get_text().rstrip('.') for i in soup.select('div[class^="doe-attsp"]')]
+        spellings = []
+        for line in spelling_strings:
+            for pattern in spaces:
+                line = line.replace(pattern, ' ')
+            for pattern,replacement in regex:
+                line = re.sub(pattern, replacement, line)
+            for pattern in cuts:
+                line = line.replace(pattern, '')
+            spellings.extend(line.split())
+        spellings = sorted(list(set(spellings)))
+        purged_spellings = sorted(list(set([form for form in spellings 
+                            if form not in disallow_forms 
+                            and not (form in exceptions and not lemma in exceptions[form])
+                            and re.search("^[a-zþæðęłœøƀāēīōūȳ\u16A0-\u16FF]+$", form)
+                            ])))
+    
+        entry_dict = {}
+        if use_lemma_id:
+            entry_dict['id'] = lemma_id
+        entry_dict['lemma'] = lemma
+        entry_dict['pos'] = pos
+        entry_dict['freq'] = occ
+        entry_dict['attsp'] = purged_spellings
+        entries[ref] = entry_dict
+        for spelling in purged_spellings:
+            if not spelling in inverted:
+                inverted[spelling] = []
+            if not ref in inverted[spelling]:
+                inverted[spelling].append((ref, lemma, pos, occ))
+            inverted[spelling] = sorted(inverted[spelling], key=lambda x: x[3], reverse=True)
+    inverted = dict(sorted(inverted.items()))
+    entries = dict(sorted(entries.items()))
+    
+    with open('attsp.json', 'w', encoding='utf-8') as output:
+        json.dump(entries, output, ensure_ascii=False, indent=4)
+    
+    with open('attsp_inverted.json', 'w') as outfile:
+        json.dump(inverted, outfile)
+    
+    for k,v in entries.items():
+        filename = k + '.txt'
+        outfile = Path.cwd() / 'attsp' / filename
+        if outfile.is_file():
+            outfile.unlink()
+        with open(outfile, 'w') as f:
+            f.write('# ' + v['lemma'] + '\n')
+            f.write('# ' + v['pos'] + '\n')
+            f.write('# ' + v['freq'])
+            for i in v['attsp']:
+                f.write(f'\n{i}')
 
-    lemma_node = soup.find('div', class_=['doe-hd', 'doe-sub', 'doe-affix'])
-    lemma = lemma_node.get_text().strip('\n')
-    pos_node = soup.find('div', class_=['doe-pos'])
-    if pos_node is None:
-        pos = ''
-    else:
-        pos = pos_node.get_text()
-    occ_node = soup.find('div', class_=['doe-occ'])
-    if occ_node is None:
-        occ = ''
-    else:
-        occ = occ_node.get_text()
-    spelling_strings = [i.get_text().rstrip('.') for i in soup.select('div[class^="doe-attsp"]')]
-    spellings = []
-    for line in spelling_strings:
-        for pattern in spaces:
-            line = line.replace(pattern, ' ')
-        for pattern,replacement in regex:
-            line = re.sub(pattern, replacement, line)
-        for pattern in cuts:
-            line = line.replace(pattern, '')
-        spellings.extend(line.split())
-    spellings = sorted(list(set(spellings)))
-    purged_spellings = list(set([form for form in spellings 
-                        if form not in disallow_forms 
-                        and not re.search('^[§.0-9]*$', form)
-                        and not (form in exceptions and not lemma in exceptions[form])
-                        ]))
-
-    entry_dict = {
-            'lemma': lemma,
-            'pos': pos,
-            'freq': occ,
-            'attsp': purged_spellings
-            }
-    entries[ref] = entry_dict
-    for spelling in purged_spellings:
-        if not spelling in inverted:
-            inverted[spelling] = []
-        if not ref in inverted[spelling]:
-            inverted[spelling].append((ref, lemma, pos, occ))
-        inverted[spelling] = sorted(inverted[spelling], key=lambda x: x[3], reverse=True)
-inverted = dict(sorted(inverted.items()))
-entries = dict(sorted(entries.items()))
-
-with open('attsp.json', 'w', encoding='utf-8') as output:
-    json.dump(entries, output, ensure_ascii=False, indent=4)
-
-with open('attsp_inverted.json', 'w') as outfile:
-    json.dump(inverted, outfile)
-
-for k,v in entries.items():
-    filename = k + '.txt'
-    outfile = Path.cwd() / 'attsp' / filename
-    if outfile.is_file():
-        outfile.unlink()
-    with open(outfile, 'w') as f:
-        f.write('# ' + v['lemma'] + '\n')
-        f.write('# ' + v['pos'] + '\n')
-        f.write('# ' + v['freq'])
-        for i in v['attsp']:
-            f.write(f'\n{i}')
+if __name__ == '__main__':
+    extract()
